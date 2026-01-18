@@ -44,7 +44,7 @@ El sistema elimina la complejidad de la calibración manual. Gracias a un motor 
 ## 🚀 Pipeline de Operación
 
 1.  **Fase V1 (Mapeo)**: El sistema construye activamente el mapa HD, aplicando filtros robustos para eliminar ruido y "anillos fantasma".
-2.  **Detección de Cierre de Bucle**: Al regresar al origen (tras recorrer $> 80m$), el sistema congela y exporta el mapa automáticamente a `.ply`.
+2.  **Detección de Cierre de Bucle**: Al regresar al origen (tras recorrer $> 80m$), el sistema congela y exporta el mapa automáticamente a formato **.ply** dentro de la carpeta `mapas_ply/`.
 3.  **Fase V2 (Localización)**: El motor cambia a un estado de navegación sólida sobre el mapa estático para tareas de planificación y control.
 
 ---
