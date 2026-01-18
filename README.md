@@ -18,12 +18,12 @@ Sistema profesional de **Navegación y Mapeo (SLAM)** de alta precisión para ro
 ### 🗺️ Mapeo HD 3D y Clasificación Semántica
 En el entorno de RViz se puede observar cómo el algoritmo detecta y clasifica objetos en tiempo real mientras construye la nube de puntos global.
 
-![Lidar Mapping Demo](videos_resultados/demo_lidar_mapping.gif)
+<img src="videos_resultados/demo_lidar_mapping.gif" width="70%" />
 
 ### 🛰️ Centro de Misión Táctico (HUD)
 Nuestra interfaz personalizada permite un seguimiento satelital preciso, mostrando la trayectoria proyectada sobre mapas de alta resolución de ESRI.
 
-![Satellite Mission Demo](videos_resultados/demo_py_satellite.gif)
+<img src="videos_resultados/demo_py_satellite.gif" width="70%" />
 
 > *Nota: Las líneas naranja y cian representan las fases de Mapeo (V1) y Localización (V2) respectivamente.*
 
@@ -50,9 +50,13 @@ El sistema elimina la complejidad de la calibración manual. Gracias a un motor 
 ---
 
 ## 🖼️ Galería de Resultados Finales
-Colección de mapas 3D generados con éxito durante las misiones de prueba:
-*   **Mapa Global del Complejo**: `[INSERTAR IMAGEN: Resultado final del .ply en Open3D]`
-*   **Destaque de Clasificación**: `[INSERTAR IMAGEN: Zoom a árboles y postes detectados]`
+Resultados visuales de las misiones de prueba y el procesamiento geométrico:
+
+| Mapeo Estructural (3D) | Control Satelital HUD |
+| :---: | :---: |
+| <img src="videos_resultados/mapping_photo.png" width="400" /> | <img src="videos_resultados/satellite_photo.png" width="400" /> |
+
+*   **Destaque de Clasificación**: Identificación precisa de árboles (verde), postes (amarillo) y estructuras (azul).
 
 ---
 
