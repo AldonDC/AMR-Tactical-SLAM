@@ -1,0 +1,31 @@
+# ROS 2 build artifacts
+build/
+install/
+log/
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.tox/
+.analytics/
+.coverage
+.venv
+venv/
+ENV/
+
+# Large Data & Bag files
+*_bag/
+*.mcap
+*.db3
+*.bag
+
+# Map files (Optional but usually kept for research if small)
+# *.ply
+
+# OS files
+.DS_Store
+.vscode/
+.idea/

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>PRO SLAM Visualizer | Lidar RTK</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --accent: #00f2ff;
+            --bg: #050508;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: white;
+            font-family: 'Roboto Mono', monospace;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .ui-panel {
+            position: absolute;
+            pointer-events: none;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 25px;
+            box-sizing: border-box;
+        }
+
+        .hud-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .brand {
+            background: rgba(0, 0, 0, 0.7);
+            border-left: 5px solid var(--accent);
+            padding: 15px 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-family: 'Orbitron';
+            font-size: 1.1rem;
+            letter-spacing: 3px;
+            color: var(--accent);
+        }
+
+        .status {
+            font-size: 0.7rem;
+            margin-top: 5px;
+            color: #00ff88;
+            text-transform: uppercase;
+        }
+
+        .telemetry {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            pointer-events: auto;
+        }
+
+        .card {
+            background: rgba(10, 10, 25, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            min-width: 140px;
+        }
+
+        .card label {
+            font-size: 0.6rem;
+            color: #666;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .card span {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .card unit {
+            font-size: 0.7rem;
+            color: var(--accent);
+            margin-left: 4px;
+        }
+
+        .hud-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        #logs {
+            width: 350px;
+            height: 120px;
+            background: rgba(0, 0, 0, 0.5);
+            font-size: 0.7rem;
+            padding: 10px;
+            overflow-y: hidden;
+            border-top: 1px solid var(--accent);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ui-panel">
+        <div class="hud-top">
+            <div class="brand">
+                <h1>LIDAR-RTK NAV PRO</h1>
+                <div class="status" id="status-text">CONNECTING TO ROSBRIDGE...</div>
+            </div>
+            <div class="telemetry">
+                <div class="card"><label>VELOCITY</label><span id="v-val">0.00</span>
+                    <unit>m/s</unit>
+                </div>
+                <div class="card"><label>POINTS</label><span id="p-val">0</span>
+                    <unit>pts</unit>
+                </div>
+                <div class="card"><label>DRIFT</label><span id="d-val">0.01</span>
+                    <unit>m</unit>
+                </div>
+                <div class="card"><label>POSITION</label><span id="c-val" style="font-size: 0.8rem;">0, 0</span></div>
+            </div>
+        </div>
+        <div class="hud-bottom">
+            <div id="logs">
+                <div>System ready. Waiting for Streamer...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- THREE.JS SCENE ---
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x050508, 0.01);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        camera.position.set(20, 20, 20);
+
+        // Ground Grid (Waymo Style)
+        const grid = new THREE.GridHelper(200, 100, 0x00f2ff, 0x111111);
+        scene.add(grid);
+
+        // Vehicle Model
+        const vehicle = new THREE.Group();
+        const body = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.5, 0.9), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+        body.position.y = 0.25;
+        vehicle.add(body);
+        const lhead = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.7), new THREE.MeshBasicMaterial({ color: 0x00f2ff }));
+        lhead.position.set(0.8, 0.3, 0);
+        vehicle.add(lhead);
+        scene.add(vehicle);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+
+        // Persistent Point Cloud (The Map)
+        const MAX_POINTS = 200000; // Large memory for persistence
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(MAX_POINTS * 3);
+        const colors = new Float32Array(MAX_POINTS * 3);
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        const material = new THREE.PointsMaterial({ size: 0.1, vertexColors: true, transparent: true, opacity: 0.8 });
+        const cloud = new THREE.Points(geometry, material);
+        scene.add(cloud);
+
+        let pointCursor = 0;
+
+        function addPoints(pts) {
+            const pos = geometry.attributes.position.array;
+            const col = geometry.attributes.color.array;
+            for (let i = 0; i < pts.length; i += 3) {
+                const idx = (pointCursor % MAX_POINTS) * 3;
+                pos[idx] = pts[i];
+                pos[idx + 1] = pts[i + 2]; // ROS Z to Three Y
+                pos[idx + 2] = -pts[i + 1]; // ROS Y to Three -Z
+
+                // Waymo Color Mapping (by height)
+                const h = pts[i + 2];
+                col[idx] = Math.min(1.0, 0.2 + h * 0.2);
+                col[idx + 1] = Math.max(0.2, 0.8 - Math.abs(h) * 0.3);
+                col[idx + 2] = Math.min(1.0, 1.0 - h * 0.2);
+
+                pointCursor++;
+            }
+            geometry.attributes.position.needsUpdate = true;
+            geometry.attributes.color.needsUpdate = true;
+            document.getElementById('p-val').innerText = pointCursor;
+        }
+
+        // --- ROSBRIDGE PROTOCOL ---
+        const socket = new WebSocket('ws://' + window.location.hostname + ':9090');
+        socket.onopen = () => {
+            document.getElementById('status-text').innerText = "LINK ESTABLISHED - RECEIVING DATA";
+            socket.send(JSON.stringify({ op: 'subscribe', topic: '/web/dashboard_data', type: 'std_msgs/msg/String' }));
+        };
+
+        socket.onmessage = (e) => {
+            const rosMsg = JSON.parse(e.data);
+            if (rosMsg.op === 'publish') {
+                const data = JSON.parse(rosMsg.msg.data);
+                if (data.type === 'LIDAR') addPoints(data.points);
+                if (data.type === 'TELEMETRY') {
+                    vehicle.position.set(data.x, data.z, -data.y);
+                    vehicle.rotation.y = data.yaw;
+                    document.getElementById('v-val').innerText = data.speed.toFixed(2);
+                    document.getElementById('c-val').innerText = `${data.x.toFixed(1)}, ${data.y.toFixed(1)}`;
+                }
+            }
+        };
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+
+</html>

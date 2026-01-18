@@ -1,0 +1,210 @@
+# =============================================================================
+# SLAM Parameters Configuration
+# =============================================================================
+# Professional 3D LiDAR-RTK SLAM - ROS 2 Humble
+# Migrated from MATLAB: lidar_slam_3d_rtk_professional_v_clusters_mejorado_v1.m
+# =============================================================================
+
+/**:
+  ros__parameters:
+    # =========================================================================
+    # OPERATION MODE
+    # =========================================================================
+    mode: "mapping"  # "mapping" (V1) or "localization" (V2)
+    
+    # =========================================================================
+    # SENSOR CONFIGURATION
+    # =========================================================================
+    lidar:
+      topic: "/velodyne_points"
+      frame_id: "velodyne"
+      
+    rtk:
+      topic: "/rtk/fix"
+      frame_id: "rtk_antenna"
+      
+    # =========================================================================
+    # LIDAR PREPROCESSING (from MATLAB: preprocessForProfessionalMap)
+    # =========================================================================
+    preprocessing:
+      # Ego vehicle removal
+      ego_radius: 2.5                    # meters - remove points within this radius
+      
+      # Range filtering
+      cylinder_radius: 35.0              # meters - max range to process
+      
+      # Height filtering (ground removal)
+      min_height: 1.0                    # meters - minimum height above ground
+      max_height: 8.0                    # meters - maximum height
+      
+      # RANSAC ground removal
+      ransac:
+        enable: true
+        distance_threshold: 0.05         # meters - plane fitting threshold
+        max_iterations: 1000
+        confidence: 99.9
+        ground_tolerance: 0.10           # meters - points within this of plane are ground
+        
+      # Downsampling
+      voxel:
+        enable: true
+        leaf_size: 0.15                  # meters - voxel grid resolution
+        
+    # =========================================================================
+    # RTK PREPROCESSING (from MATLAB: detectRTK_3D_Enhanced)
+    # =========================================================================
+    rtk_preprocessing:
+      # Origin (set automatically from first fix if not specified)
+      origin:
+        auto_set: true
+        latitude: 0.0
+        longitude: 0.0
+        altitude: 0.0
+        
+      # Hampel filter for outlier removal
+      hampel:
+        enable: true
+        window_size: 9
+        threshold: 3.0                   # sigma multiplier
+        
+      # Velocity check
+      max_speed_ms: 12.0                 # m/s - reject jumps exceeding this
+      
+      # Lever arm correction (antenna to base_link)
+      lever_arm:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        
+      # Z weight enhancement
+      z_weight: 2.0                      # boost RTK altitude influence
+      
+    # =========================================================================
+    # SCAN MATCHING - NDT (from MATLAB: pcregisterndt)
+    # =========================================================================
+    scan_matching:
+      algorithm: "ndt"                   # "ndt" or "icp"
+      
+      # NDT parameters for MAPPING (V1)
+      ndt_v1:
+        resolution: 6.0                  # gridStepV1 in MATLAB
+        max_iterations: 120              # NDT_MAX_ITER_V1
+        transformation_epsilon: 0.005
+        step_size: 0.1
+        outlier_ratio: 0.15
+        
+      # NDT parameters for LOCALIZATION (V2) - more precise
+      ndt_v2:
+        resolution: 2.5                  # gridStepV2 in MATLAB
+        max_iterations: 50               # V2_MAX_ITERATIONS
+        transformation_epsilon: 0.01
+        step_size: 0.05
+        outlier_ratio: 0.30              # V2_OUTLIER_RATIO
+        
+      # ICP fallback for sharp curves
+      icp_fallback:
+        enable: true
+        curve_angle_threshold: 30.0      # degrees - use ICP when turn > this
+        max_iterations: 100
+        max_correspondence_distance: 2.0
+        
+      # Validation
+      max_spatial_jump: 5.0              # meters - reject larger jumps
+      divergence_threshold: 2.0          # meters - RTK-SLAM divergence trigger
+      
+    # =========================================================================
+    # RTK-SLAM FUSION (from MATLAB: RTK_FOLLOW_PRECISION)
+    # =========================================================================
+    fusion:
+      # Weights for V1 (mapping)
+      rtk_weight_v1: 0.85                # RTK_FOLLOW_PRECISION
+      
+      # Weights for V2 (localization) - higher RTK trust
+      rtk_weight_v2: 0.95                # RTK_V2_WEIGHT
+      
+      # Drift detection and correction
+      drift:
+        enable: true
+        threshold: 2.0                   # RTK_V2_DRIFT_THRESHOLD meters
+        boost_weight: 0.95               # weight when drift detected
+        
+      # Smooth factor for transitions
+      smooth_factor: 0.8                 # RTK_V2_SMOOTH_FACTOR
+      
+    # =========================================================================
+    # MAP BUILDING (from MATLAB: buildProfessionalGlobalMap)
+    # =========================================================================
+    map_builder:
+      # Keyframe selection
+      keyframe_distance: 4.0             # meters - min distance between keyframes
+      
+      # Map resolution
+      voxel_resolution: 0.3              # resMap in MATLAB
+      
+      # Map size limits
+      max_points: 50000                  # maxPtsMap in MATLAB
+      
+      # Spatial filtering - only keep points near trajectory
+      trajectory_filter:
+        enable: true
+        radius: 12.0                     # meters - filterPointsNearTrajectory
+        
+      # ROI for localization
+      roi_radius: 45.0                   # roiR in MATLAB
+      
+    # =========================================================================
+    # LOOP CLOSURE (from MATLAB: ENABLE_LOOP_CLOSURE)
+    # =========================================================================
+    loop_closure:
+      enable: true
+      
+      # Detection thresholds
+      distance_threshold: 6.0            # LOOP_CLOSURE_THRESHOLD meters
+      min_frames_gap: 30                 # LOOP_CLOSURE_MIN_FRAMES
+      
+      # Correction
+      max_correction_factor: 0.5         # gradual correction
+      
+      # Multi-scale detection
+      multi_scale: true
+      geometric_verification: true
+      
+    # =========================================================================
+    # TF FRAMES
+    # =========================================================================
+    frames:
+      map_frame: "map"
+      odom_frame: "odom"
+      base_frame: "base_link"
+      lidar_frame: "velodyne"
+      rtk_frame: "rtk_antenna"
+      
+    # =========================================================================
+    # VISUALIZATION AND OUTPUT
+    # =========================================================================
+    visualization:
+      publish_rate: 1.0                  # Hz for map publishing
+      path_publish_rate: 10.0            # Hz for trajectory
+      
+    output:
+      # Map export
+      export_ply: true
+      ply_filename: "final_map_3d.ply"
+      
+      # Trajectory export  
+      export_trajectory: true
+      trajectory_filename: "slam_trajectory.csv"
+      
+    # =========================================================================
+    # PROCESSING
+    # =========================================================================
+    processing:
+      # Frame skipping for performance
+      skip_frames: 3                     # skipFrames in MATLAB
+      
+      # Update rate for visualization
+      update_rate: 8                     # updateRate in MATLAB
+      
+      # Thread settings
+      use_parallel: true
+      num_threads: 4

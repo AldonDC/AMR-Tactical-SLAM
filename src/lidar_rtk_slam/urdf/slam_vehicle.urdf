@@ -1,0 +1,156 @@
+<?xml version="1.0"?>
+<robot name="slam_vehicle">
+  <!-- AMR Vehicle URDF - Professional Visualization -->
+
+  <!-- Base link (centro del robot) -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="1.2 0.8 0.4"/>
+      </geometry>
+      <origin xyz="0 0 0.2" rpy="0 0 0"/>
+      <material name="vehicle_body">
+        <color rgba="0.15 0.15 0.2 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- Cabina/Techo -->
+  <link name="cabin">
+    <visual>
+      <geometry>
+        <box size="0.6 0.7 0.35"/>
+      </geometry>
+      <material name="cabin_glass">
+        <color rgba="0.2 0.3 0.4 0.8"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="base_to_cabin" type="fixed">
+    <parent link="base_link"/>
+    <child link="cabin"/>
+    <origin xyz="-0.1 0 0.55" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Ruedas -->
+  <link name="wheel_fl">
+    <visual>
+      <geometry><cylinder radius="0.15" length="0.08"/></geometry>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <material name="wheel"><color rgba="0.1 0.1 0.1 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="base_to_wheel_fl" type="fixed">
+    <parent link="base_link"/><child link="wheel_fl"/>
+    <origin xyz="0.4 0.45 0.0"/>
+  </joint>
+
+  <link name="wheel_fr">
+    <visual>
+      <geometry><cylinder radius="0.15" length="0.08"/></geometry>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <material name="wheel"><color rgba="0.1 0.1 0.1 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="base_to_wheel_fr" type="fixed">
+    <parent link="base_link"/><child link="wheel_fr"/>
+    <origin xyz="0.4 -0.45 0.0"/>
+  </joint>
+
+  <link name="wheel_rl">
+    <visual>
+      <geometry><cylinder radius="0.15" length="0.08"/></geometry>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <material name="wheel"><color rgba="0.1 0.1 0.1 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="base_to_wheel_rl" type="fixed">
+    <parent link="base_link"/><child link="wheel_rl"/>
+    <origin xyz="-0.4 0.45 0.0"/>
+  </joint>
+
+  <link name="wheel_rr">
+    <visual>
+      <geometry><cylinder radius="0.15" length="0.08"/></geometry>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <material name="wheel"><color rgba="0.1 0.1 0.1 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="base_to_wheel_rr" type="fixed">
+    <parent link="base_link"/><child link="wheel_rr"/>
+    <origin xyz="-0.4 -0.45 0.0"/>
+  </joint>
+
+  <!-- LiDAR Velodyne -->
+  <link name="velodyne">
+    <visual>
+      <geometry><cylinder radius="0.06" length="0.12"/></geometry>
+      <origin xyz="0 0 0.06"/>
+      <material name="lidar_base"><color rgba="0.3 0.3 0.35 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="base_to_lidar" type="fixed">
+    <parent link="base_link"/><child link="velodyne"/>
+    <origin xyz="0 0 0.75"/>
+  </joint>
+
+  <link name="lidar_dome">
+    <visual>
+      <geometry><sphere radius="0.055"/></geometry>
+      <material name="lidar_dome_mat"><color rgba="0.0 0.8 1.0 0.7"/></material>
+    </visual>
+  </link>
+  <joint name="lidar_to_dome" type="fixed">
+    <parent link="velodyne"/><child link="lidar_dome"/>
+    <origin xyz="0 0 0.13"/>
+  </joint>
+
+  <!-- RTK Antenna -->
+  <link name="rtk_antenna">
+    <visual>
+      <geometry><cylinder radius="0.02" length="0.15"/></geometry>
+      <origin xyz="0 0 0.075"/>
+      <material name="antenna_post"><color rgba="0.5 0.5 0.5 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="base_to_rtk" type="fixed">
+    <parent link="base_link"/><child link="rtk_antenna"/>
+    <origin xyz="-0.5 0 0.75"/>
+  </joint>
+
+  <link name="rtk_dish">
+    <visual>
+      <geometry><cylinder radius="0.08" length="0.03"/></geometry>
+      <material name="antenna_dish"><color rgba="0.9 0.9 0.9 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="rtk_to_dish" type="fixed">
+    <parent link="rtk_antenna"/><child link="rtk_dish"/>
+    <origin xyz="0 0 0.16"/>
+  </joint>
+
+  <!-- LED Lights -->
+  <link name="led_front_left">
+    <visual>
+      <geometry><box size="0.02 0.15 0.03"/></geometry>
+      <material name="led_cyan"><color rgba="0.0 1.0 1.0 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="base_to_led_fl" type="fixed">
+    <parent link="base_link"/><child link="led_front_left"/>
+    <origin xyz="0.61 0.25 0.25"/>
+  </joint>
+
+  <link name="led_front_right">
+    <visual>
+      <geometry><box size="0.02 0.15 0.03"/></geometry>
+      <material name="led_cyan"><color rgba="0.0 1.0 1.0 1.0"/></material>
+    </visual>
+  </link>
+  <joint name="base_to_led_fr" type="fixed">
+    <parent link="base_link"/><child link="led_front_right"/>
+    <origin xyz="0.61 -0.25 0.25"/>
+  </joint>
+
+</robot>
