@@ -4,108 +4,144 @@ A professional-grade SLAM (Simultaneous Localization and Mapping) framework deve
 
 ---
 
-## Technical Overview
+## 1. System Architecture
 
-The framework implements a dual-phase SLAM architecture designed to handle large-scale environments with minimal manual intervention. The core innovation lies in its ability to synchronize disparate sensor data through automated extrinsic calibration and semantic geometric classification.
+The framework is built on a modular ROS 2 architecture, ensuring high-frequency data processing and robust sensor fusion. Below is the high-level data flow diagram:
 
-### Core Algorithms & Implementation
+```mermaid
+graph TD
+    subgraph "Sensors Layer"
+        GPS[RTK GPS /NavSatFix/]
+        LiDAR[3D LiDAR /PointCloud2/]
+    end
 
-#### 1. Intelligent Auto-Calibration Engine
-Manual extrinsic calibration between a LiDAR and an RTK-GPS is error-prone and time-consuming. This framework implements a kinematic-based auto-calibration routine:
-*   **Motion Vector Correlation**: The system listens to the first 15 keyframes of motion. It computes the vehicle's heading $(\theta_{RTK})$ using the differential ENU position.
-*   **LiDAR Alignment**: Simultaneously, the SLAM engine analyzes the point cloud distribution to find the principal axis of the environment. 
-*   **Optimization**: It computes the angular offset $(\Delta\theta)$ required to align the LiDAR coordinate system with the Earth-referenced RTK frame, ensuring that "Forward" in the point cloud matches "Forward" in the geodetic frame.
+    subgraph "Preprocessing Layer"
+        RP[RTK Preprocessor]
+        LP[LiDAR Preprocessor]
+        RP -->|ENU Odom| SE[SLAM Engine]
+        LP -->|Filtered Cloud| SE
+    end
 
-#### 2. Semantic Geometric Classification
-The system performs real-time point cloud parsing to distinguish between static infrastructure and organic obstacles:
-*   **Segmentation**: Points are clustered using **DBSCAN** ($eps=0.40, min\_points=12$) after a floor-removal pass.
-*   **Geometric Heuristics**: 
-    *   **Vertical Man-made**: Objects with high height-to-width ratios ($>2.2$) and consistent narrow widths ($<0.6m$) are classified as **Poles/Lamps** (Yellow).
-    *   **Organic Clusters**: Dense, irregular clusters are classified as **Trees** (Green).
-    *   **Infrastructural Planes**: Large planar segments ($width > 4.0m$) are marked as **Buildings/Structures** (Blue).
+    subgraph "SLAM Engine (rtk_direct_map_builder)"
+        AC[Auto-Calibration]
+        SC[Semantic Classifier]
+        MM[Map Manager]
+        AC --> MM
+        SC --> MM
+    end
 
-#### 3. High-Fidelity Geodetic Processing
-To ensure sub-decimeter accuracy in navigation, the following geodetic corrections are applied:
-*   **LLA to ENU Projection**: Uses the WGS84 ellipsoid model to project global Latitude/Longitude to a local East-North-Up Cartesian plane.
-*   **Hampel Outlier Removal**: A sliding-window filter ($N=9$) detects and suppresses GPS multi-path errors or signal jumps.
-*   **Lever-Arm Correction**: Compensates for the physical 3D displacement between the GPS antenna and the vehicle's center of mass, preventing trajectory warping during turns.
-
----
-
-## System Architecture & Data Flow
-
-### 1. Pre-processing Layer
-*   **Lidar Node**: Handles cylindrical ROI filtering to remove the vehicle's ego-chassis reflections (radius < 4m) and voxelizes the cloud to 0.15m.
-*   **RTK Node**: Synchronizes NMEA fix data and generates a stabilized TF between the `map` and `rtk_antenna` frames.
-
-### 2. SLAM Engine (Dual-Phase)
-*   **Phase I: HD Mapping (V1)**: Points are transformed into the global frame using the calibrated offset and integrated into a spatial voxel grid. 
-*   **Loop Closure Detection**: The system monitors the **Euclidean distance** back to the origin. Once a minimum distance is met (e.g., 80m) and the robot returns to the start radius (15m), the map is "frozen."
-*   **Phase II: Static localization (V2)**: The robot localizes against the previously built HD map, providing a stable pose for path planning without accumulating map drift.
-
-### 3. Tactical Mission Control (HUD)
-A standalone telemetry interface built with Matplotlib and Python, providing a "Satellite View" overlay:
-*   **Dynamic Tile Fetching**: Integrates ESRI World Imagery at Level 18 zoom.
-*   **Projected Paths**: Inverse-projects the SLAM ENU trajectory back to global Latitude/Longitude to align exactly with satellite maps.
-*   **Telemetry HUD**: Real-time display of Speed (km/h), Heading, and operational phase status.
+    subgraph "Visualization Layer"
+        RV2[RViz 2: 3D HD Map]
+        HUD[Tactical HUD: Satellite Tracking]
+        MM --> RV2
+        MM --> HUD
+    end
+```
 
 ---
 
-## Visualization Guide
+## 2. Theory of Operation
 
-### RViz 2 (3D HD Map)
-Focuses on the high-fidelity 3D reconstruction. You will see:
-*   **Global Map**: Semantic-colored point cloud (Buildings, Trees, Poles).
-*   **Robot Model**: Current 3D pose and orientation.
-*   **Phase Indicator**: Visual feedback of mapping progression.
+### 2.1. Kinematic Auto-Calibration
+Traditional SLAM systems require manual measurement of sensor extrinsics. This framework automates this through kinematic correlation.
+*   **Vector Analysis**: The system analyzes the first 15 keyframes. It calculates the vehicle's displacement vector in the Earth-Centered frame (RTK).
+*   **Sensor Cross-Correlation**: It identifies the primary axis of environmental returns in the LiDAR frame.
+*   **Optimization**: By minimizing the error between the motion-derived heading and the point-cloud principal axis, the system identifies the exact yaw offset $(\Delta\psi)$ of the sensor mount.
 
-### Mission Control Window (2D Tactical)
-Focuses on geospatial context:
-*   **Red Cursor**: Real-time vehicle position and heading.
-*   **Orange Trail**: Mapping phase trajectory (V1).
-*   **Cyan Trail**: Localization phase trajectory (V2).
+### 2.2. Semantic Geometric Labeling
+The framework moves beyond "blind" mapping by assigning semantic meaning to geometric structures without using expensive neural networks.
+*   **DBSCAN Clustering**: Clusters dense returns into discrete objects.
+*   **Morphological Heuristics**: 
+    - **Poles/Infrastructure**: Verticality ratio $> 2.2$ and width $< 0.6m$.
+    - **Vegetation**: Irregular density clusters with non-planar surfaces.
+    - **Structural Walls**: Wide planar surfaces ($width > 4.0m$).
+
+### 2.3. Geodetic Fusion (WGS84 -> ENU)
+To maintain spatial consistency for mapping, the system converts global coordinates into a local Flat-Earth projection:
+*   **Projection**: Uses the WGS84 ellipsoid parameters to project $(\phi, \lambda, h)$ into local $(e, n, u)$ Cartesian coordinates.
+*   **Lever-Arm Correction**: Computes the 3D translation from the antenna to the vehicle's center of rotation to prevent orientation-induced translation errors.
 
 ---
 
-## Technical Specifications & Requirements
+## 3. The SLAM Pipeline
 
-| Metric | Specification |
+### Phase I: HD Mapping (V1)
+In the Mapping Phase, the system focuses on high-fidelity environment reconstruction.
+1.  **Keyframe Logic**: Data is only integrated when the vehicle moves $>3m$, preventing map over-saturation when stationary.
+2.  **Voxel Grid Integration**: Points are stored in a centralized voxel grid to maintain a uniform density and prevent memory leaks.
+3.  **Semantic Coloring**: Every point is assigned a color code representing its classified category (Building, Tree, Pole).
+
+### Loop Closure & Transition
+The system continuously monitors its Euclidean distance from the origin.
+*   **Engagement**: Once the total distance traveled exceeds 80 meters.
+*   **Detection**: If the current position enters a 15-meter radius of the starting point.
+*   **Action**: The Mapping Phase is disabled, and the current map is serialized to a `.ply` file.
+
+### Phase II: Localization (V2)
+Once transition occurs, the SLAM Engine switches to a static mode.
+1.  **Pose Streaming**: High-frequency pose updates are published to the `/odom` and `/tf` topics.
+2.  **Navigation Context**: The existing global map provides the static context for path planning without further updates.
+
+---
+
+## 4. Visualization & GUI
+
+### RViz 2: High-Resolution 3D View
+The primary visualization tool for structural analysis and map verification.
+> **[INSERT IMAGE: Phase 1 Mapping Result]**
+*   *Displays*: Semantic cloud, Trajectory, Semantic Segments.
+
+### Tactical Mission Control (HUD)
+A custom-built Python interface designed for mission monitoring.
+> **[INSERT IMAGE: Tactical HUD Screenshot]**
+*   **Satellite Overlay**: Uses ESRI World Imagery tiles.
+*   **Inverse Projection**: Trajectories are converted from ENU back to LLA for exact satellite alignment.
+*   **Telemetry Panel**: Real-time Speed (km/h), Heading (deg), and Phase Status.
+
+---
+
+## 5. Technical Specifications
+
+| Feature | Specification |
 | :--- | :--- |
-| **Middle-ware** | ROS 2 Humble Hawksbill |
-| **Input Topics** | `/rtk/fix` (sensor_msgs/NavSatFix), `/velodyne_points` (sensor_msgs/PointCloud2) |
-| **Output Topics** | `/slam/map`, `/slam/path`, `/rtk/odom_enu` |
-| **Dependencies** | Open3D (0.15+), NumPy, Scipy, Matplotlib, Pillow, Requests |
-| **Accuracy** | Approx. 5-10cm (RTK-dependent) |
+| **Middle-ware** | ROS 2 Humble Hawksbill (LTS) |
+| **Localization Accuracy** | < 10cm (RTK dependent) |
+| **Processing Delay** | < 50ms per keyframe |
+| **Output Formats** | PLY (Colored Cloud), NMEA/ENU Odometry |
+| **Dependencies** | Open3D, NumPy, Matplotlib, SciPy, Pillow, Requests |
 
 ---
 
-## Installation & Deployment
+## 6. Installation & Deployment
 
-### 1. Environment Setup
+### 1. Prerequisite Installation
+Ensure a standard ROS 2 Humble setup. Install extended Python libraries:
 ```bash
 pip install numpy open3d scipy matplotlib requests Pillow
 ```
 
-### 2. Workspace Construction
+### 2. Workspace Setup
 ```bash
-# Navigate to your ROS 2 workspace
+# Clone the repository into your src folder
 cd amr_2026_research_m&l
 colcon build --symlink-install --packages-select lidar_rtk_slam
 source install/setup.bash
 ```
 
-### 3. Launch Orchestration
+### 3. Running the Framework
 ```bash
-# This launch file starts all preprocessing, SLAM, and UI nodes simultaneously
+# Launch the full stack including Preprocessors, SLAM, RViz, and Tactical HUD
 ros2 launch lidar_rtk_slam rtk_direct_slam.launch.py
 ```
 
 ---
 
-## Development & Maintenance
-**Project**: AMR 2026 - Research Division  
-**Lead Engineer**: Alfonso  
-**Focus**: Precision Geospatial Localization & Persistent 3D Environment Reconstruction
+## 7. Future Work
+*   *Multi-agent mapping support.*
+*   *Real-time mesh generation from semantic clusters.*
+*   *Integration with MoveIt 2 for autonomous obstacle avoidance.*
 
 ---
-*Generated by the AMR 2026 Research Team.*
+**Lead Author**: Alfonso  
+**Project**: AMR 2026 Research Division  
+**Context**: Advanced Geospatial Localization & Persistent 3D Environment Reconstruction
