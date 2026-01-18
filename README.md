@@ -16,43 +16,48 @@ Sistema profesional de **Navegación y Mapeo (SLAM)** de alta precisión para ro
 ## 🧠 Bases Algorítmicas
 
 ### 1. Auto-Calibración Cinemática
-Elimina la necesidad de medir manualmente la posición del sensor. El sistema correlaciona el vector de movimiento del RTK con la distribución de puntos del LiDAR:
-*   **Cálculo**: Se analizan los primeros 15 keyframes para resolver el desfase angular $\Delta\psi$ entre el heading del GPS $(\theta_{RTK})$ y el eje principal del LiDAR $(\theta_{LiDAR})$:
-    $$\Delta\psi = \arg\min \sum | \vec{v}_{RTK} - \mathbf{R}(\theta) \cdot \vec{d}_{LiDAR} |$$
+Elimina la necesidad de medir manualmente la posición del sensor. El sistema correlaciona el vector de movimiento del RTK con la distribución de puntos del LiDAR para calcular el desfase angular $\Delta\psi$:
+
+$$
+\Delta\psi = \arg\min_{\theta} \sum_{i=1}^{n} \left\| \vec{v}_{RTK,i} - \mathbf{R}(\theta) \cdot \vec{d}_{LiDAR,i} \right\|
+$$
+
+Donde $\theta_{RTK}$ es el rumbo del GPS y $\theta_{LiDAR}$ es el eje principal detectado en la nube de puntos.
 
 ### 2. Clasificación Semántica Geométrica
-El SLAM identifica objetos sin necesidad de IA pesada, usando descriptores de forma:
-*   **Postes/Infraestructura**: Relación altura/ancho $> 2.2$ y ancho $< 0.6m$.
-*   **Vegetación**: Clusters irregulares detectados mediante **DBSCAN** ($eps=0.4, min\_pts=12$).
-*   **Estructuras**: Planos anchos con superficie $> 4.0m$.
+El SLAM identifica objetos sin necesidad de IA pesada, usando descriptores de forma y el algoritmo **DBSCAN** ($eps=0.4, min\_pts=12$):
+
+*   **Postes**: Relación $\frac{altura}{ancho} > 2.2$ y $ancho < 0.6m$.
+*   **Vegetación**: Clusters de alta densidad irregular (Árboles/Arbustos).
+*   **Estructuras**: Superficies planas con $longitud > 4.0m$.
 
 ### 3. Fusión Geodésica (WGS84 ➔ ENU)
-Proyecta las coordenadas globales $(\phi, \lambda, h)$ al plano local Cartesiano $(e, n, u)$ usando el elipsoide WGS84, aplicando una **corrección de brazo de palanca (Lever-Arm)** para compensar la distancia física entre la antena y el centro del robot.
+Proyecta coordenadas geodésicas $(\phi, \lambda, h)$ al plano local Cartesiano $(x, y, z)$ mediante una transformación de plano tangente local (ENU), aplicando corrección de **Lever-Arm** para compensar el desplazamiento físico entre antena y centro del robot.
 
 ---
 
 ## 🚀 Pipeline de Operación
 
-1.  **Fase V1 (Mapeo)**: Construcción de mapa HD. Los puntos se integran solo si el robot se mueve $> 3m$ para evitar saturación.
-2.  **Cierre de Bucle**: Al detectar que el robot regresa al origen (radio $< 15m$) después de recorrer $> 80m$, el mapa se congela y se guarda en `.ply`.
-3.  **Fase V2 (Localización)**: El sistema cambia a modo estático para navegación pura sobre el mapa generado, eliminando derivas.
+1.  **Fase V1 (Mapeo)**: Construcción de mapa HD. Integración de puntos activada por umbral de movimiento ($> 3m$).
+2.  **Cierre de Bucle**: Al detectar regreso al origen (radio $< 15m$) tras recorrer $> 80m$, el mapa se exporta a formato `.ply`.
+3.  **Fase V2 (Localización)**: Navegación de estado sólido sobre el mapa estático con alta frecuencia de actualización de pose.
 
 ---
 
 ## 🛰️ Mission Control (HUD Táctico)
-Interfaz en **Python** que funciona como centro de mando:
-*   **Mosaico Satelital**: Descarga en tiempo real mapas de ESRI (Zoom 18).
-*   **Telemetría Proyectada**: Conversión inversa de ENU a LLA para alinear la trayectoria del robot con el satélite.
-*   **HUD**: Muestra velocidad (km/h), rumbo y fase actual de la misión.
+Centro de mando desarrollado en **Python** para monitorización táctica:
+*   **Mosaico Satelital**: Integración dinámica con ESRI World Imagery (Zoom 18).
+*   **Trayectorias Inversas**: Proyección de datos ENU de vuelta a coordenadas globales para alineación satelital precisa.
+*   **Telemetría**: Visualización en tiempo real de velocidad ($km/h$), rumbo y estado de fase.
 
 ---
 
 ## 🏁 Estado del Proyecto: CONCLUIDO ✅
 
 *   [x] Fusión LiDAR-RTK robusta.
-*   [x] Motor de auto-calibración funcional.
+*   [x] Motor de auto-calibración cinemática.
 *   [x] Clasificación de objetos en tiempo real.
-*   [x] Centro de mando satelital operativo.
+*   [x] Centro de mando satelital de alta resolución.
 
 ---
 
@@ -66,7 +71,7 @@ cd amr_2026_research_m&l
 colcon build --symlink-install
 source install/setup.bash
 
-# Lanzamiento Profesional
+# Lanzamiento
 ros2 launch lidar_rtk_slam rtk_direct_slam.launch.py
 ```
 
