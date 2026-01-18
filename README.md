@@ -54,7 +54,7 @@ Resultados visuales de las misiones de prueba y el procesamiento geométrico:
 
 | Mapeo Estructural (3D) | Control Satelital HUD |
 | :---: | :---: |
-| <img src="videos_resultados/mapping_photo.png" width="400" /> | <img src="videos_resultados/satellite_photo.png" width="400" /> |
+| <img src="videos_resultados/mapping2.png" width="400" /> | <img src="videos_resultados/satellite_photo2.png" width="400" /> |
 
 *   **Destaque de Clasificación**: Identificación precisa de árboles (verde), postes (amarillo) y estructuras (azul).
 
