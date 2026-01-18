@@ -18,12 +18,12 @@ Sistema profesional de **Navegación y Mapeo (SLAM)** de alta precisión para ro
 ### 🗺️ Mapeo HD 3D y Clasificación Semántica
 En el entorno de RViz se puede observar cómo el algoritmo detecta y clasifica objetos en tiempo real mientras construye la nube de puntos global.
 
-https://github.com/AldonDC/AMR-Tactical-SLAM/blob/main/videos_resultados/Screencast-from-01-17-2026-07_57_02-PM.mp4
+videos_resultados/Screencast-from-01-17-2026-07_57_02-PM.mp4
 
 ### 🛰️ Centro de Misión Táctico (HUD)
 Nuestra interfaz personalizada permite un seguimiento satelital preciso, mostrando la trayectoria proyectada sobre mapas de alta resolución de ESRI.
 
-https://github.com/AldonDC/AMR-Tactical-SLAM/blob/main/videos_resultados/Screencast-from-01-17-2026-07_29_42-PM.mp4
+videos_resultados/Screencast-from-01-17-2026-07_29_42-PM.mp4
 
 > *Nota: Las líneas naranja y cian representan las fases de Mapeo (V1) y Localización (V2) respectivamente.*
 
