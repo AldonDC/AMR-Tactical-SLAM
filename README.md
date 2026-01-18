@@ -13,31 +13,45 @@ Sistema profesional de **Navegación y Mapeo (SLAM)** de alta precisión para ro
 
 ---
 
-## 🛰️ Innovación y Control de Misión
+## � Demostración del Sistema
+
+### 🗺️ Mapeo HD 3D y Clasificación Semántica
+En el entorno de RViz se puede observar cómo el algoritmo detecta y clasifica objetos en tiempo real mientras construye la nube de puntos global.
+> **[INSERTAR FOTO AQUÍ: Captura de pantalla de RViz con el mapa 3D y el robot]**
+
+### 🛰️ Centro de Misión Táctico (HUD)
+Nuestra interfaz personalizada permite un seguimiento satelital preciso, mostrando la trayectoria proyectada sobre mapas de alta resolución de ESRI.
+| Vista de Satélite | Telemetría en Tiempo Real |
+| :---: | :---: |
+| ![Satellite View Placeholder](https://via.placeholder.com/400x300.png?text=Mission+Control+View) | ![Telemetry HUD Placeholder](https://via.placeholder.com/400x300.png?text=HUD+Telemetry+Display) |
+> *Nota: Las líneas naranja y cian representan las fases de Mapeo (V1) y Localización (V2) respectivamente.*
+
+---
+
+## �🛰️ Innovación y Control de Misión
 
 ### Experiencia de Visualización Dual
 Este framework redefine la monitorización de robots autónomos mediante una arquitectura de visualización dividida:
-*   **Mapeo HD 3D (RViz)**: Reconstrucción estructural del entorno en tiempo real, permitiendo inspeccionar la densidad de la nube de puntos y la clasificación de objetos.
-*   **Tactical HUD (Python)**: Centro de mando satelital que proyecta telemetría avanzada (velocidad, rumbo, coordenadas) sobre cartografía de alta resolución, ideal para misiones de campo.
+*   **Mapeo HD 3D (RViz)**: Reconstrucción estructural del entorno en tiempo real.
+*   **Tactical HUD (Python)**: Centro de mando satelital con telemetría integrada.
 
 ### Calibración Autónoma "Zero-Effort"
-El sistema elimina la complejidad de la calibración manual. Gracias a un motor de inteligencia cinemática, el robot detecta automáticamente la posición y el ángulo del sensor LiDAR analizando sus primeros metros de movimiento. Esto garantiza una alineación perfecta entre el mapa y el GPS sin intervención humana.
+El sistema elimina la complejidad de la calibración manual. Gracias a un motor de inteligencia cinemática, el robot detecta automáticamente la posición y el ángulo del sensor LiDAR analizando sus primeros metros de movimiento.
 
 ---
 
 ## 🚀 Pipeline de Operación
 
-1.  **Fase V1 (Mapeo)**: El sistema construye activamente el mapa HD mientras el vehículo explora, aplicando filtros robustos para eliminar ruido y "anillos fantasma".
-2.  **Detección de Cierre de Bucle**: Al regresar al punto de inicio (tras recorrer una distancia mínima de 80m), el sistema congela automáticamente el mapa y lo exporta a formato `.ply`.
-3.  **Fase V2 (Localización)**: El motor cambia a un estado de navegación sólida sobre el mapa estático, proporcionando una pose ultra-estable para tareas de planificación y control.
+1.  **Fase V1 (Mapeo)**: El sistema construye activamente el mapa HD, aplicando filtros robustos para eliminar ruido y "anillos fantasma".
+2.  **Detección de Cierre de Bucle**: Al regresar al origen (tras recorrer $> 80m$), el sistema congela y exporta el mapa automáticamente a `.ply`.
+3.  **Fase V2 (Localización)**: El motor cambia a un estado de navegación sólida sobre el mapa estático para tareas de planificación y control.
 
 ---
 
-## 🎯 Características Tácticas Clave
-
-*   **Clasificación Geométrica**: Identificación automática de infraestructura (postes, paredes) y vegetación (árboles) mediante descriptores de forma.
-*   **Fusión Geodésica de Alta Precisión**: Proyección inteligente de coordenadas globales (WGS84) a ejes cartesianos locales, compensando físicamente la posición de la antena RTK.
-*   **Dashboard de Telemetría**: Visualización de métricas críticas de misión en una interfaz independiente, optimizada para equipos de monitoreo remoto.
+## 🖼️ Galería de Resultados Finales
+Colección de mapas 3D generados con éxito durante las misiones de prueba:
+*   **Mapa Global del Complejo**: `[INSERTAR IMAGEN: Resultado final del .ply en Open3D]`
+*   **Destaque de Clasificación**: `[INSERTAR IMAGEN: Zoom a árboles y postes detectados]`
 
 ---
 
