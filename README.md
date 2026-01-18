@@ -13,65 +13,54 @@ Sistema profesional de **Navegación y Mapeo (SLAM)** de alta precisión para ro
 
 ---
 
-## 🧠 Bases Algorítmicas
+## 🛰️ Innovación y Control de Misión
 
-### 1. Auto-Calibración Cinemática
-Elimina la necesidad de medir manualmente la posición del sensor. El sistema correlaciona el vector de movimiento del RTK con la distribución de puntos del LiDAR para calcular el desfase angular $\Delta\psi$:
+### Experiencia de Visualización Dual
+Este framework redefine la monitorización de robots autónomos mediante una arquitectura de visualización dividida:
+*   **Mapeo HD 3D (RViz)**: Reconstrucción estructural del entorno en tiempo real, permitiendo inspeccionar la densidad de la nube de puntos y la clasificación de objetos.
+*   **Tactical HUD (Python)**: Centro de mando satelital que proyecta telemetría avanzada (velocidad, rumbo, coordenadas) sobre cartografía de alta resolución, ideal para misiones de campo.
 
-$$
-\Delta\psi = \arg\min_{\theta} \sum_{i=1}^{n} \left\| \vec{v}_{RTK,i} - \mathbf{R}(\theta) \cdot \vec{d}_{LiDAR,i} \right\|
-$$
-
-Donde $\theta_{RTK}$ es el rumbo del GPS y $\theta_{LiDAR}$ es el eje principal detectado en la nube de puntos.
-
-### 2. Clasificación Semántica Geométrica
-El SLAM identifica objetos sin necesidad de IA pesada, usando descriptores de forma y el algoritmo **DBSCAN** ($eps=0.4, min\_pts=12$):
-
-*   **Postes**: Relación $\frac{altura}{ancho} > 2.2$ y $ancho < 0.6m$.
-*   **Vegetación**: Clusters de alta densidad irregular (Árboles/Arbustos).
-*   **Estructuras**: Superficies planas con $longitud > 4.0m$.
-
-### 3. Fusión Geodésica (WGS84 ➔ ENU)
-Proyecta coordenadas geodésicas $(\phi, \lambda, h)$ al plano local Cartesiano $(x, y, z)$ mediante una transformación de plano tangente local (ENU), aplicando corrección de **Lever-Arm** para compensar el desplazamiento físico entre antena y centro del robot.
+### Calibración Autónoma "Zero-Effort"
+El sistema elimina la complejidad de la calibración manual. Gracias a un motor de inteligencia cinemática, el robot detecta automáticamente la posición y el ángulo del sensor LiDAR analizando sus primeros metros de movimiento. Esto garantiza una alineación perfecta entre el mapa y el GPS sin intervención humana.
 
 ---
 
 ## 🚀 Pipeline de Operación
 
-1.  **Fase V1 (Mapeo)**: Construcción de mapa HD. Integración de puntos activada por umbral de movimiento ($> 3m$).
-2.  **Cierre de Bucle**: Al detectar regreso al origen (radio $< 15m$) tras recorrer $> 80m$, el mapa se exporta a formato `.ply`.
-3.  **Fase V2 (Localización)**: Navegación de estado sólido sobre el mapa estático con alta frecuencia de actualización de pose.
+1.  **Fase V1 (Mapeo)**: El sistema construye activamente el mapa HD mientras el vehículo explora, aplicando filtros robustos para eliminar ruido y "anillos fantasma".
+2.  **Detección de Cierre de Bucle**: Al regresar al punto de inicio (tras recorrer una distancia mínima de 80m), el sistema congela automáticamente el mapa y lo exporta a formato `.ply`.
+3.  **Fase V2 (Localización)**: El motor cambia a un estado de navegación sólida sobre el mapa estático, proporcionando una pose ultra-estable para tareas de planificación y control.
 
 ---
 
-## 🛰️ Mission Control (HUD Táctico)
-Centro de mando desarrollado en **Python** para monitorización táctica:
-*   **Mosaico Satelital**: Integración dinámica con ESRI World Imagery (Zoom 18).
-*   **Trayectorias Inversas**: Proyección de datos ENU de vuelta a coordenadas globales para alineación satelital precisa.
-*   **Telemetría**: Visualización en tiempo real de velocidad ($km/h$), rumbo y estado de fase.
+## 🎯 Características Tácticas Clave
+
+*   **Clasificación Geométrica**: Identificación automática de infraestructura (postes, paredes) y vegetación (árboles) mediante descriptores de forma.
+*   **Fusión Geodésica de Alta Precisión**: Proyección inteligente de coordenadas globales (WGS84) a ejes cartesianos locales, compensando físicamente la posición de la antena RTK.
+*   **Dashboard de Telemetría**: Visualización de métricas críticas de misión en una interfaz independiente, optimizada para equipos de monitoreo remoto.
 
 ---
 
 ## 🏁 Estado del Proyecto: CONCLUIDO ✅
 
-*   [x] Fusión LiDAR-RTK robusta.
+*   [x] Fusión LiDAR-RTK robusta y estable.
 *   [x] Motor de auto-calibración cinemática.
 *   [x] Clasificación de objetos en tiempo real.
-*   [x] Centro de mando satelital de alta resolución.
+*   [x] Centro de mando satelital operativo y fluido.
 
 ---
 
-## 💾 Instalación Rápida
+## 💾 Instalación y Uso Rápido
 ```bash
-# Dependencias
+# 1. Instalar dependencias
 pip install numpy open3d scipy matplotlib requests Pillow
 
-# Compilación
+# 2. Compilar Workspace
 cd amr_2026_research_m&l
 colcon build --symlink-install
 source install/setup.bash
 
-# Lanzamiento
+# 3. Lanzar Centro de Misión
 ros2 launch lidar_rtk_slam rtk_direct_slam.launch.py
 ```
 
