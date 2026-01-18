@@ -13,7 +13,7 @@ Sistema profesional de **Navegación y Mapeo (SLAM)** de alta precisión para ro
 
 ---
 
-## � Demostración del Sistema
+## Demostración del Sistema
 
 ### 🗺️ Mapeo HD 3D y Clasificación Semántica
 En el entorno de RViz se puede observar cómo el algoritmo detecta y clasifica objetos en tiempo real mientras construye la nube de puntos global.
@@ -28,7 +28,7 @@ Nuestra interfaz personalizada permite un seguimiento satelital preciso, mostran
 
 ---
 
-## �🛰️ Innovación y Control de Misión
+## Control del sistema
 
 ### Experiencia de Visualización Dual
 Este framework redefine la monitorización de robots autónomos mediante una arquitectura de visualización dividida:
@@ -48,7 +48,7 @@ El sistema elimina la complejidad de la calibración manual. Gracias a un motor 
 
 ---
 
-## 🖼️ Galería de Resultados Finales
+##  Galería de Resultados Finales
 Colección de mapas 3D generados con éxito durante las misiones de prueba:
 *   **Mapa Global del Complejo**: `[INSERTAR IMAGEN: Resultado final del .ply en Open3D]`
 *   **Destaque de Clasificación**: `[INSERTAR IMAGEN: Zoom a árboles y postes detectados]`
