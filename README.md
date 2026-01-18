@@ -17,7 +17,8 @@ Sistema profesional de **Navegación y Mapeo (SLAM)** de alta precisión para ro
 
 ### 🗺️ Mapeo HD 3D y Clasificación Semántica
 En el entorno de RViz se puede observar cómo el algoritmo detecta y clasifica objetos en tiempo real mientras construye la nube de puntos global.
-> **[INSERTAR FOTO AQUÍ: Captura de pantalla de RViz con el mapa 3D y el robot]**
+<img width="1752" height="847" alt="image" src="https://github.com/user-attachments/assets/3bda2b56-c43a-48f0-a9ed-47fbc5356bd2" />
+
 
 ### 🛰️ Centro de Misión Táctico (HUD)
 Nuestra interfaz personalizada permite un seguimiento satelital preciso, mostrando la trayectoria proyectada sobre mapas de alta resolución de ESRI.
