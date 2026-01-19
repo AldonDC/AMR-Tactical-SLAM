@@ -1,87 +1,156 @@
-# AMR 2026: Framework Avanzado de SLAM LiDAR-RTK
+# 🤖 AMR 2026 Research - Mapping & Localization
 
-Sistema profesional de **Navegación y Mapeo (SLAM)** de alta precisión para robots autónomos, optimizado para **ROS 2 Humble**. Integra nubes de puntos 3D con posicionamiento RTK-GPS centimétrico.
+## Autonomous Mobile Robot Navigation System
 
----
-
-## 🛠️ Stack Tecnológico
-
-![ROS 2](https://img.shields.io/badge/ROS2-Humble-blue?style=for-the-badge&logo=ros)
-![Python](https://img.shields.io/badge/Python-3.10-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![Ubuntu](https://img.shields.io/badge/Ubuntu-22.04-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)
-![Open3D](https://img.shields.io/badge/Open3D-3D_Engine-orange?style=for-the-badge)
+Sistema de navegación autónoma para AMR (Autonomous Mobile Robot) utilizando RTK-GPS, LiDAR y ROS2.
 
 ---
 
-## 📺 Demostración del Sistema
+## 🎯 Características Principales
 
-### 🗺️ Mapeo HD 3D y Clasificación Semántica
-En el entorno de RViz se puede observar cómo el algoritmo detecta y clasifica objetos en tiempo real mientras construye la nube de puntos global.
+### 📍 Navegación Autónoma
+- **Pure Pursuit Controller** con modelo de bicicleta cinemático
+- Límite de steering: ±17.5°
+- Lookahead dinámico basado en velocidad
+- Velocidad adaptativa en curvas
 
-<img src="videos_resultados/demo_lidar_mapping.gif" width="70%" />
+### 🌐 Dashboard Web
+- Interfaz web profesional ("Sistema Autónomo AMR")
+- Visualización de trayectorias V1/V2 en mapa satelital
+- Gráficas en tiempo real (steering, velocidad, distancia)
+- Control de waypoints interactivo
 
-### 🛰️ Centro de Misión Táctico (HUD)
-Nuestra interfaz personalizada permite un seguimiento satelital preciso, mostrando la trayectoria proyectada sobre mapas de alta resolución de ESRI.
-
-<img src="videos_resultados/demo_py_satellite.gif" width="70%" />
-
-> *Nota: Las líneas naranja y cian representan las fases de Mapeo (V1) y Localización (V2) respectivamente.*
-
----
-
-## 🛰️ Innovación y Control de Misión
-
-### Experiencia de Visualización Dual
-Este framework redefine la monitorización de robots autónomos mediante una arquitectura de visualización dividida:
-*   **Mapeo HD 3D (RViz)**: Reconstrucción estructural del entorno en tiempo real.
-*   **Tactical HUD (Python)**: Centro de mando satelital con telemetría integrada.
-
-### Calibración Autónoma "Zero-Effort"
-El sistema elimina la complejidad de la calibración manual. Gracias a un motor de inteligencia cinemática, el robot detecta automáticamente la posición y el ángulo del sensor LiDAR analizando sus primeros metros de movimiento.
+### 🛰️ Sensores
+- **RTK-GPS**: Localización centimétrica
+- **LiDAR Velodyne VLP-16**: Mapeo 3D
+- **Odometría**: Fusión de sensores
 
 ---
 
-## 🚀 Pipeline de Operación
+## 📁 Estructura del Proyecto
 
-1.  **Fase V1 (Mapeo)**: El sistema construye activamente el mapa HD, aplicando filtros robustos para eliminar ruido y "anillos fantasma".
-2.  **Detección de Cierre de Bucle**: Al regresar al origen (tras recorrer $> 80m$), el sistema congela y exporta el mapa automáticamente a formato **.ply** dentro de la carpeta `mapas_ply/`.
-3.  **Fase V2 (Localización)**: El motor cambia a un estado de navegación sólida sobre el mapa estático para tareas de planificación y control.
-
----
-
-## 🖼️ Galería de Resultados Finales
-Resultados visuales de las misiones de prueba y el procesamiento geométrico:
-
-| Mapeo Estructural (3D) | Control Satelital HUD |
-| :---: | :---: |
-| <img src="videos_resultados/mapping2.png" width="400" /> | <img src="videos_resultados/satellite_photo2.png" width="400" /> |
-
-*   **Destaque de Clasificación**: Identificación precisa de árboles (verde), postes (amarillo) y estructuras (azul).
-
----
-
-## 🏁 Estado del Proyecto: CONCLUIDO ✅
-
-*   [x] Fusión LiDAR-RTK robusta y estable.
-*   [x] Motor de auto-calibración cinemática.
-*   [x] Clasificación de objetos en tiempo real.
-*   [x] Centro de mando satelital operativo y fluido.
-
----
-
-## 💾 Instalación y Uso Rápido
-```bash
-# 1. Instalar dependencias
-pip install numpy open3d scipy matplotlib requests Pillow
-
-# 2. Compilar Workspace
-cd amr_2026_research_m&l
-colcon build --symlink-install
-source install/setup.bash
-
-# 3. Lanzar Centro de Misión
-ros2 launch lidar_rtk_slam rtk_direct_slam.launch.py
+```
+amr_2026_research_m&l/
+├── path_planning_autonomusNav/
+│   └── lidar_rtk_nav/
+│       ├── lidar_rtk_nav/
+│       │   ├── tactical_autopilot.py      # Pure Pursuit Controller
+│       │   ├── web_dashboard.py           # Dashboard Web AMR
+│       │   ├── trajectory_tracker.py      # Trazador V1/V2
+│       │   ├── motion_simulator.py        # Simulador de movimiento
+│       │   └── static_map_server.py       # Servidor de mapa estático
+│       ├── launch/
+│       │   └── tactical_nav.launch.py     # Launch principal
+│       └── rviz/
+│           └── slam_pro.rviz              # Configuración RViz
+└── README.md
 ```
 
 ---
-**Desarrollado por**: Alfonso | **División**: AMR 2026 Research 🏎️🛰️🦾
+
+## 🚀 Instalación
+
+### Requisitos
+- Ubuntu 22.04
+- ROS2 Humble
+- Python 3.10+
+
+### Dependencias
+```bash
+sudo apt install ros-humble-nav2-msgs ros-humble-tf2-ros
+pip install flask
+```
+
+### Compilación
+```bash
+cd ~/ros2_ws
+colcon build --symlink-install --packages-select lidar_rtk_nav
+source install/setup.bash
+```
+
+---
+
+## 🎮 Uso
+
+### 1. Simulación con Bag (datos grabados)
+```bash
+source install/setup.bash
+ros2 launch lidar_rtk_nav tactical_nav.launch.py
+```
+
+### 2. Abrir Dashboard Web
+Navegador: **http://localhost:5000**
+
+### 3. Agregar Waypoints
+- Click en el mapa para agregar waypoints
+- Click "INICIAR NAVEGACIÓN" para comenzar
+
+---
+
+## 🔧 Controlador Pure Pursuit
+
+### Modelo de Bicicleta Cinemático
+
+```
+Curvatura:   κ = 2·sin(α) / Ld
+Steering:    δ = atan(L · κ)
+Vel. Angular: ω = v·tan(δ) / L
+```
+
+### Parámetros
+
+| Parámetro | Valor | Descripción |
+|-----------|-------|-------------|
+| `wheelbase` | 1.0 m | Distancia entre ejes |
+| `max_steering_deg` | ±17.5° | Límite de giro |
+| `max_velocity` | 1.0 m/s | Velocidad máxima |
+| `lookahead_min` | 2.0 m | Lookahead mínimo |
+| `lookahead_max` | 6.0 m | Lookahead máximo |
+| `goal_tolerance` | 2.0 m | Tolerancia de llegada |
+
+---
+
+## 🌐 Dashboard Web
+
+### Layout
+```
+┌────────────────────────────────────────────────────────────────┐
+│  🤖 SISTEMA AUTÓNOMO AMR     Lat  Lon  WP    [STATUS]         │
+├──────────────┬─────────────────────────────┬───────────────────┤
+│ Control      │                             │ Waypoints         │
+│ [Volante]    │       MAPA SATELITAL        │ [Lista]           │
+│ Métricas     │   V1: Naranja, V2: Cyan     │ [INICIAR]         │
+│ Gráficas     │   Robot: Rojo               │ [DETENER]         │
+└──────────────┴─────────────────────────────┴───────────────────┘
+```
+
+---
+
+## 📊 Topics ROS2
+
+| Topic | Tipo | Descripción |
+|-------|------|-------------|
+| `/rtk/fix` | NavSatFix | Posición GPS RTK |
+| `/rtk/odom_enu` | Odometry | Odometría ENU |
+| `/cmd_vel` | Twist | Comandos de velocidad |
+| `/slam/path_mapping` | Path | Trayectoria V1 |
+| `/slam/path_localization` | Path | Trayectoria V2 |
+| `/navigation/path` | Path | Waypoints de misión |
+| `/autopilot/metrics` | Float32MultiArray | Métricas del autopilot |
+
+---
+
+## 👥 Equipo
+
+- **Alfonso** - Desarrollo principal
+
+## 📄 Licencia
+
+MIT License - 2026
+
+---
+
+## 🔗 Referencias
+
+- Coulter, R. Craig. "Implementation of the Pure Pursuit Path Tracking Algorithm"
+- Snider, Jarrod M. "Automatic Steering Methods for Autonomous Automobile Path Tracking"
