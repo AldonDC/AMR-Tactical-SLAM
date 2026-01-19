@@ -27,6 +27,23 @@ Sistema de navegación autónoma para AMR (Autonomous Mobile Robot) utilizando R
 
 ---
 
+## 🎬 Demos Visuales
+
+### 📍 Fase 1: Mapeo 3D con LiDAR (RViz)
+
+Visualización del mapeo en tiempo real con el sensor Velodyne VLP-16:
+
+![Mapeo LiDAR en RViz](videos_resultados/demo_lidar_mapping.gif)
+
+### 🛰️ Fase 2: Localización Satelital + Dashboard Web
+
+Interfaz web "Sistema Autónomo AMR" con mapa satelital y trayectorias V1/V2:
+
+![Localización Satelital](videos_resultados/localizacion_satelite.png)
+
+---
+
+
 ## 📁 Estructura del Proyecto
 
 ```
